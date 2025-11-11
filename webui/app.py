@@ -45,7 +45,6 @@ HTML = '''
             }
         }
         fetchLatest();
-''' + f'''
         setInterval(fetchLatest, UPDATE_INTERVAL_WM);
     </script>
 </body>
