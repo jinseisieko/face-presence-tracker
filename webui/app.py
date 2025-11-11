@@ -1,7 +1,7 @@
 from flask import Flask, render_template_string
 
 app = Flask(__name__)
-UPDATE_INTERVAL = 14
+UPDATE_INTERVAL = 1
 HTML = '''
 <!DOCTYPE html>
 <html>
@@ -20,17 +20,20 @@ HTML = '''
     <h1>Face Presence Tracker — Live View</h1>
     <div id="status">Loading...</div>
     <img id="frame" src="" alt="Live feed">
+    <div id="stats">Loading...</div>
     <script>
         async function fetchLatest() {
             try {
                 const response = await fetch('/latest');
+                const response_stats = await fetch('/stats');
                 if (!response.ok) throw new Error("No data");
+                if (!response_stats.ok) throw new Error("No data");
                 const data = await response.json();
-
-                // Показать изображение
+                const data_stats = await response_stats.json();
+                delete data_stats.last_frame_b64;
+                
                 document.getElementById('frame').src = 'data:image/jpeg;base64,' + data.frame_b64;
 
-                // Обновить статус
                 const statusEl = document.getElementById('status');
                 const time = new Date(data.timestamp * 1000).toLocaleTimeString();
                 if (data.has_face) {
@@ -40,8 +43,11 @@ HTML = '''
                     statusEl.innerHTML = `No face | ${time}`;
                     statusEl.className = 'no-face';
                 }
+
+                const statsEl = document.getElementById('stats');
+                statsEl.innerHTML = 'STATS: ' + JSON.stringify(data_stats, null, 2);
             } catch (e) {
-                document.getElementById('status').innerHTML = 'Waiting for data...';
+                document.getElementById('stats').innerHTML = 'Waiting for data...';
             }
         }
         fetchLatest();
@@ -62,6 +68,15 @@ def proxy_latest():
     import requests
     try:
         resp = requests.get("http://analyzer:5000/latest", timeout=3)
+        return resp.json(), resp.status_code
+    except:
+        return {"error": "Analyzer unavailable"}, 503
+
+@app.route('/stats')
+def proxy_stats():
+    import requests
+    try:
+        resp = requests.get("http://analyzer:5000/stats", timeout=3)
         return resp.json(), resp.status_code
     except:
         return {"error": "Analyzer unavailable"}, 503

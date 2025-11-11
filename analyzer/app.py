@@ -77,8 +77,9 @@ def receive_frame():
 
 @app.route('/stats')
 def stats():
+    safe_state = {k: v for k, v in STATE.items() if k != "last_frame_b64"}
     return jsonify({
-        "STATE": STATE,
+        "STATE": safe_state,
         "session_active": STATE["session_start"] is not None
     })
 

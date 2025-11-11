@@ -13,7 +13,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("processor")
 
-SEND_INTERVAL = 1.0
+SEND_INTERVAL = 1
 FRAME_WIDTH, FRAME_HEIGHT = 320, 240
 
 cap = cv2.VideoCapture(0)
@@ -27,6 +27,16 @@ last_send_time = 0
 
 logger.info("Processor started. Sending frames to analyzer...")
 
+def detectFaces(frame):
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+    has_face = len(faces) > 0
+
+    for (x, y, w, h) in faces:
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+    return has_face
+
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -34,12 +44,7 @@ while True:
         time.sleep(1)
         continue
 
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-    has_face = len(faces) > 0
-
-    for (x, y, w, h) in faces:
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    has_face = detectFaces(frame)
 
     current_time = time.time()
     if current_time - last_send_time >= SEND_INTERVAL:
