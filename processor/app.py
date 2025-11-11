@@ -8,8 +8,9 @@ import logging
 
 logging.basicConfig(
     level=logging.INFO,
-     format='%[ (asctime)s processor ]\t%(message)s'
-    )
+    format='%(asctime)s | processor | %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 logger = logging.getLogger("processor")
 
 SEND_INTERVAL = 5.0
@@ -48,20 +49,20 @@ while True:
             "frame_b64": frame_b64
         }
 
-    try:
-        response = requests.post(
-            "http://analyzer:5000/frame",
-            json=payload,
-            timeout=5
-        )
-        if response.status_code == 200:
-            logger.info(f"Frame sent | has_face: {has_face}")
-        else:
-            logger.warning(f"Analyzer error: {response.status_code}")
-    except Exception as e:
-        logger.error(f"Failed to send frame: {e}")
+        try:
+            response = requests.post(
+                "http://analyzer:5000/frame",
+                json=payload,
+                timeout=5
+            )
+            if response.status_code == 200:
+                logger.info(f"Frame sent | has_face: {has_face}")
+            else:
+                logger.warning(f"Analyzer error: {response.status_code}")
+        except Exception as e:
+            logger.error(f"Failed to send frame: {e}")
 
-    last_send_time = current_time
+        last_send_time = current_time
 
     time.sleep(0.01)  
 
