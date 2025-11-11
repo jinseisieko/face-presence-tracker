@@ -14,6 +14,9 @@ app = Flask(__name__)
 daily_sessions = []
 
 STATE = {
+    "last_frame_b64": None,
+    "last_timestamp": None,
+    "last_has_face": False,
     "last_face_time": None,
     "session_start": None,
     "face_timeout_sec": 5.0,
@@ -37,9 +40,14 @@ def receive_frame():
 
         now = datetime.fromtimestamp(timestamp)
         today = now.strftime("%Y-%m-%d")
+        
 
         if today not in STATE["daily_total"]:
             STATE["daily_total"][today] = [0.0, []]
+
+        STATE["last_frame_b64"] = frame_b64
+        STATE["last_timestamp"] = timestamp
+        STATE["last_has_face"] = has_face
 
         if has_face:
             STATE["last_face_time"] = timestamp
@@ -70,9 +78,19 @@ def receive_frame():
 @app.route('/stats')
 def stats():
     return jsonify({
-        "daily_hours": {
-            date: round(sec / 3600, 2) for (date, sec), _ in STATE["daily_total"].items()
-        },
+        "STATE": STATE,
+        "session_active": STATE["session_start"] is not None
+    })
+
+@app.route('/latest')
+def get_latest():
+    if STATE["last_frame_b64"] is None:
+        return jsonify({"error": "No frame received yet"}), 404
+
+    return jsonify({
+        "timestamp": STATE["last_timestamp"],
+        "has_face": STATE["last_has_face"],
+        "frame_b64": STATE["last_frame_b64"],
         "session_active": STATE["session_start"] is not None
     })
 
