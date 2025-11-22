@@ -17,6 +17,11 @@ SEND_INTERVAL = 1
 FRAME_WIDTH, FRAME_HEIGHT = 320, 240
 
 cap = cv2.VideoCapture(0)
+
+if not cap.isOpened():
+    logger.error("Cannot open camera")
+    exit(-1)
+
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
 

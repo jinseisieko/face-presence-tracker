@@ -11,7 +11,8 @@ logging.basicConfig(
 logger = logging.getLogger("analyzer")
 
 app = Flask(__name__)
-daily_sessions = []
+
+
 
 STATE = {
     "last_frame_b64": None,
@@ -23,9 +24,6 @@ STATE = {
     "daily_total": {},
     "min_session_sec": 2.0
 }
-
-def get_today():
-    return datetime.now().strftime("%Y-%m-%d")
 
 @app.route('/frame', methods=['POST'])
 def receive_frame():
